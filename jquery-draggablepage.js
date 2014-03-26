@@ -26,7 +26,10 @@ var DraggablePage = {
   _allowDrag: false,
 
 	// Boolean to prevent multiple events firing on mouseup and mouseleave
-	_isHandlingUpEvent: false,
+	_isHandlingReleaseEvent: false,
+
+	// CSS3 transition support
+	_useCSS3: false,
 
 	// Initial coordinates
 	_targetX: null,
@@ -38,14 +41,15 @@ var DraggablePage = {
 	_options: {},
 	_defaults: {
 		direction: 'up',
-		pivotPoint: 0.8
+		pivotPoint: 0.8,
+		animation: {
+			duration: 400, // only for fallback
+			fade: false // fade-out on hide
+		}
 	},
 
 	// Init
   init: function(target, options) {
-		// Define event context
-		var context = this;
-
 		// Load options
 		this._options = $.extend(true, {}, this._defaults, options);
 
@@ -55,6 +59,20 @@ var DraggablePage = {
 		// Define target
 		this._target = target;
 
+		// Check for CSS3 transition support otherwise use fallback
+		if(null !== Modernizr) {
+			this._useCSS3 = Modernizr.csstransitions;
+		}
+
+		// Bind events
+		this.bindEvents();
+  },
+
+	// Bind events
+	bindEvents: function() {
+		// Define event context
+		var context = this;
+
 		// Resize event
 		$(window).on('orientationchange resize', function(e) {
 			context.onResize(e, context);
@@ -63,24 +81,24 @@ var DraggablePage = {
 		// Trigger resize event to set initial size
 		$(window).triggerHandler('resize');
 
-		// MouseDown event
+		// Grab event
     this._target.on('mousedown', function(e) {
-			context.onMouseDown(e, context);
+			context.onGrab(e, context);
 		});
 
-		// MouseUp / MouseLeave event
+		// Release event
     this._target.one('mouseup mouseleave', function(e) {
-			if(this._isHandlingUpEvent) return;
+			if(this._isHandlingReleaseEvent) return;
 
-			this._isHandlingUpEvent = true;
-			context.onMouseUp(e, context);
+			this._isHandlingReleaseEvent = true;
+			context.onRelease(e, context);
 		});
 
-		// MouseMove event
+		// Move event
     this._target.on('mousemove', function(e) {
-			context.onMouseMove(e, context);
+			context.onMove(e, context);
 		});
-  },
+	},
 
 	// Check options for errors
 	checkOptions: function() {
@@ -100,8 +118,8 @@ var DraggablePage = {
 		context._target.height($(window).height());
 	},
 
-	// MouseDown event
-  onMouseDown: function(e, context) {
+	// Grab event
+  onGrab: function(e, context) {
 		// Allow dragging
     context._allowDrag = true;
 
@@ -116,13 +134,10 @@ var DraggablePage = {
 		context._target.addClass('no-transitions');
   },
 
-	// MouseUp event
-  onMouseUp: function(e, context) {
+	// Release event
+  onRelease: function(e, context) {
 		// Direction to be dragged
 		var direction = context._options.direction;
-
-		// True if pivot point crossed
-		var isHiding = false;
 
 		// Re-enable text selection and CSS3 transitions
 		$(document.body).removeClass('no-select');
@@ -139,12 +154,10 @@ var DraggablePage = {
 
 			// Slide out if beyond pivot point
 			if(pageBottom < pivotPoint) {
-				context._target.css('top', 0 - context._target.height());
-
-				isHiding = true;
+				context.animateProp('top', 0 - context._target.height(), true);
 			}
 			else {
-				context._target.css('top', 0);
+				context.animateProp('top', 0, false);
 			}
 		}
 		else if(direction == 'down') {
@@ -153,12 +166,10 @@ var DraggablePage = {
 
 			// Slide out if beyond pivot point
 			if(context._target.position().top > pivotPoint) {
-				context._target.css('top', context._target.height());
-
-				isHiding = true;
+				context.animateProp('top', context._target.height(), true);
 			}
 			else {
-				context._target.css('top', 0);
+				context.animateProp('top', 0, false);
 			}
 		}
 		else if(direction == 'left') {
@@ -171,12 +182,10 @@ var DraggablePage = {
 
 			// Slide out if beyond pivot point
 			if(pageRight < pivotPoint) {
-				context._target.css('left', 0 - context._target.width());
-
-				isHiding = true;
+				context.animateProp('left', 0 - context._target.width(), true);
 			}
 			else {
-				context._target.css('left', 0);
+				context.animateProp('left', 0, false);
 			}
 		}
 		else if(direction == 'right') {
@@ -185,23 +194,11 @@ var DraggablePage = {
 
 			// Slide out if beyond pivot point
 			if(context._target.position().left > pivotPoint) {
-				context._target.css('left', context._target.width());
-
-				isHiding = true;
+				context.animateProp('left', context._target.width(), true);
 			}
 			else {
-				context._target.css('left', 0);
+				context.animateProp('left', 0, false);
 			}
-		}
-
-		if(isHiding) {
-			context._target.on('transitionend', function(e) {
-				context._target.hide();
-
-				// Trigger custom event draggablePageHidden
-				context._target.triggerHandler('draggablePageHidden');
-				context._target.unbind('transitionend');
-			});
 		}
 
 		// Disable dragging
@@ -214,8 +211,8 @@ var DraggablePage = {
     context._mouseY = null;
   },
 
-	// MouseMove event
-  onMouseMove: function(e, context) {
+	// Move event
+  onMove: function(e, context) {
 		// Return if not draggable
     if(!context._allowDrag) return;
 
@@ -254,10 +251,61 @@ var DraggablePage = {
 		} else {
 			context._target.css('left', dragX);
 		}
-  }
+  },
+
+	// Animate property with CSS3 or fallback
+	animateProp: function(property, value, hiding) {
+		// CSS 3
+		if(this._useCSS3) {
+			this._target.css(property, value);
+
+			if(hiding) {
+				// Fade out
+				if(this._options.animation.fade) {
+					this._target.css('opacity', 0);
+				}
+
+				// Listen for TransitionEnd to really hide the target
+				this._target.on('transitionend', function(e) {
+					if(e.propertyName == property) {
+						// Hide target
+						$(e.target).hide();
+
+						// Trigger custom event draggablePageHidden
+						$(e.target).triggerHandler('draggablePageHidden');
+
+						// Unbind event
+						$(e.target).unbind('transitionend');
+					}
+				});
+			}
+		}
+		else { // Fallback
+			var animProps = {};
+
+			// Set our property to animate
+			animProps[property] = value;
+
+			// Fade out if hiding
+			if(hiding && this._options.animation.fade) {
+				animProps.opacity = 0;
+			}
+
+			// Animate
+			this._target.animate(animProps, this._options.animation.duration, 'swing', function() {
+				if(hiding) {
+					// Hide target
+					$(this).hide();
+
+					// Trigger custom event draggablePageHidden
+					$(this).triggerHandler('draggablePageHidden');
+				}
+			});
+		}
+	}
 };
 
 $.fn.draggablePage = function(options) {
   DraggablePage.init(this, options);
 	return this;
-}
+};
