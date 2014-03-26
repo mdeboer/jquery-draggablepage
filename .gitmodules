@@ -1,0 +1,3 @@
+[submodule "js/jquery-draggablepage"]
+	path = js/jquery-draggablepage
+	url = https://github.com/mdeboer/jquery-draggablepage

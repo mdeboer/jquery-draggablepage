@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>jQuery Draggable Page</title>
+
+        <!-- Style -->
+        <style>
+            #intro {
+                display: block;
+                width: 100%;
+                height: 100%;
+                background: red;
+                position: fixed;
+                overflow: hidden;
+                top: 0;
+                left: 0;
+                -webkit-transition: top 400ms ease-out, left 400ms ease-out, opacity 400ms;
+                   -moz-transition: top 400ms ease-out, left 400ms ease-out, opacity 400ms;
+                     -o-transition: top 400ms ease-out, left 400ms ease-out, opacity 400ms;
+                        transition: top 400ms ease-out, left 400ms ease-out, opacity 400ms;
+
+            }
+
+            .no-transitions {
+                -webkit-transition: none!important;
+                   -moz-transition: none!important;
+                     -o-transition: none!important;
+                        transition: none!important;
+            }
+
+            .no-select {
+                -webkit-user-select: none!important;
+                   -moz-user-select: none!important;
+                     -o-user-select: none!important;
+                        user-select: none!important;
+            }
+
+            .container {
+                padding: 0 15%;
+            }
+        </style>
+
+        <!-- jQuery -->
+        <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+
+        <!-- Modernizr -->
+        <script src="js/modernizr.custom.min.js"></script>
+
+        <!-- Draggable page -->
+        <script src="js/jquery-draggablepage/jquery-draggablepage.min.js"></script>
+	</head>
+	<body>
+        <div id="intro">
+            <div class="container">
+                <h1>Intro</h1>
+                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Veritatis ipsa illo quae cupiditate sed. Vitae provident qui veritatis deleniti non eligendi optio recusandae fuga cupiditate id beatae laboriosam totam voluptatum.</p>
+                <p>Molestiae adipisci non expedita iste assumenda reprehenderit itaque labore odio placeat commodi exercitationem similique magni. Delectus aperiam dolorem veniam omnis repellendus culpa provident quisquam sequi dolorum voluptas possimus eos aut.</p>
+                <p>Debitis commodi sed iusto illum rerum autem aspernatur voluptate excepturi eveniet reprehenderit atque sit libero omnis iure doloremque expedita totam ratione. Dolor repellat laudantium magnam facilis cupiditate modi deleniti assumenda.</p>
+                <p>Molestiae quaerat tempore quis. Cupiditate nostrum totam nisi! Eaque culpa reprehenderit tenetur repellendus iusto officiis modi tempore laborum facere vel accusantium velit minima eius harum esse quisquam recusandae nesciunt vitae.</p>
+                <p>Sit vel architecto aperiam repudiandae! Cumque eos ea itaque quod accusamus molestias esse iusto quisquam facilis deleniti error velit quam explicabo sint ullam reiciendis atque expedita eius modi fugit neque.</p>
+                <p>Nemo ipsum repudiandae magnam eum reprehenderit reiciendis deserunt qui libero porro saepe rerum quos maxime nesciunt molestiae maiores itaque quibusdam omnis cumque aliquam nisi sapiente tempora ea commodi aliquid labore?</p>
+                <p>Voluptatibus officia nemo porro laborum iure assumenda officiis dolor esse doloremque labore. Doloremque ut est eius repellat tempora voluptatem dolorum quasi nihil dolor ex nesciunt nobis culpa quos eveniet modi.</p>
+                <p>Eos aliquid magnam ullam perspiciatis sit similique quo. Laboriosam maiores facilis consequatur! Possimus fuga placeat alias voluptas maxime excepturi nam esse totam asperiores nihil beatae atque deleniti est rerum quisquam.</p>
+                <p>Placeat deserunt voluptates doloribus repellat repudiandae sit ipsa voluptatum dignissimos itaque dicta! Praesentium distinctio maxime illo quo iure minima explicabo rem nulla voluptates itaque error fuga non rerum eius nihil.</p>
+                <p>Molestiae rem quos voluptas saepe nihil porro voluptatibus perferendis placeat sapiente unde vitae quas accusamus soluta illum deleniti quasi pariatur totam repellendus dolore quibusdam sit quia distinctio magni assumenda nemo.</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <h1>Welcome</h1>
+
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Omnis vero libero ut ratione reprehenderit obcaecati voluptate nisi rerum adipisci natus eos fugiat dolorum. Nesciunt dignissimos repudiandae distinctio magnam neque sit.</p>
+            <p>Necessitatibus odit nihil aperiam porro eum aut pariatur fuga suscipit qui atque recusandae tempora quo illo nostrum unde quibusdam autem officiis quia provident perspiciatis voluptatibus accusantium quis rerum iusto veritatis!</p>
+            <p>Error laborum facere minima possimus beatae et modi quaerat earum ullam eaque reprehenderit quo voluptatem quidem totam ratione. Iusto perferendis repudiandae porro ab a quae nobis enim similique distinctio illum.</p>
+            <p>Possimus illo optio neque accusantium nulla cum nemo labore quam assumenda unde voluptatibus numquam cupiditate eveniet recusandae sed facilis et eos eius maiores perferendis nisi iusto esse quisquam eligendi tempore.</p>
+        </div>
+
+        <script>
+            $('#intro').draggablePage();
+        </script>
+	</body>
+</html>
