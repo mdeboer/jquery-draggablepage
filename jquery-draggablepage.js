@@ -60,7 +60,7 @@ var DraggablePage = {
 		this._target = target;
 
 		// Check for CSS3 transition support otherwise use fallback
-		if(null !== Modernizr) {
+		if(typeof Modernizr !== 'undefined') {
 			this._useCSS3 = Modernizr.csstransitions;
 		}
 
@@ -129,9 +129,12 @@ var DraggablePage = {
     context._mouseX = e.pageX;
     context._mouseY = e.pageY;
 
-		// Disable text selection and CSS3 transitions
-		$(document.body).addClass('no-select');
+		// Re-enable CSS3 transitions
 		context._target.addClass('no-transitions');
+
+		// Re-enable text selection
+		context._target.addClass('no-select');
+		$(document.body).attr('unselectable', 'on');
   },
 
 	// Release event
@@ -139,9 +142,15 @@ var DraggablePage = {
 		// Direction to be dragged
 		var direction = context._options.direction;
 
-		// Re-enable text selection and CSS3 transitions
-		$(document.body).removeClass('no-select');
+		// Pivot point
+		var pivotPoint = null;
+
+		// Re-enable CSS3 transitions
 		context._target.removeClass('no-transitions');
+
+		// Re-enable text selection
+		context._target.removeClass('no-select');
+		$(document.body).removeAttr('unselectable');
 
 		// Slide page out if over pivot point
 		if(direction == 'up') {
@@ -150,7 +159,7 @@ var DraggablePage = {
 			var pageBottom = context._target.position().top + context._target.height();
 
 			// Calculate pivot point
-			var pivotPoint = Math.floor($(document).height() * context._options.pivotPoint);
+			pivotPoint = Math.floor($(document).height() * context._options.pivotPoint);
 
 			// Slide out if beyond pivot point
 			if(pageBottom < pivotPoint) {
@@ -162,7 +171,7 @@ var DraggablePage = {
 		}
 		else if(direction == 'down') {
 			// Calculate pivot point
-			var pivotPoint = Math.floor($(document).height() - ($(document).height() * context._options.pivotPoint));
+			pivotPoint = Math.floor($(document).height() - ($(document).height() * context._options.pivotPoint));
 
 			// Slide out if beyond pivot point
 			if(context._target.position().top > pivotPoint) {
@@ -178,7 +187,7 @@ var DraggablePage = {
 			var pageRight = context._target.position().left + context._target.width();
 
 			// Calculate pivot point
-			var pivotPoint = Math.floor($(document).width() * context._options.pivotPoint);
+			pivotPoint = Math.floor($(document).width() * context._options.pivotPoint);
 
 			// Slide out if beyond pivot point
 			if(pageRight < pivotPoint) {
@@ -190,7 +199,7 @@ var DraggablePage = {
 		}
 		else if(direction == 'right') {
 			// Calculate pivot point
-			var pivotPoint = Math.floor($(document).width() - ($(document).width() * context._options.pivotPoint));
+			pivotPoint = Math.floor($(document).width() - ($(document).width() * context._options.pivotPoint));
 
 			// Slide out if beyond pivot point
 			if(context._target.position().left > pivotPoint) {

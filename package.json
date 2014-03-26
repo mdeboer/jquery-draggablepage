@@ -1,0 +1,28 @@
+{
+  "name": "jquery-draggablepage",
+  "version": "1.0.0",
+  "description": "jQuery Draggable Page Plugin",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mdeboer/jquery-draggablepage.git"
+  },
+  "keywords": [
+    "jquery",
+    "drag",
+    "page",
+    "plugin",
+    "draggable",
+    "javascript",
+    "html5"
+  ],
+  "author": "Maarten de Boer <info@maartendeboer.net>",
+  "license": "GPL v2",
+  "bugs": {
+    "url": "https://github.com/mdeboer/jquery-draggablepage/issues"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.4",
+    "grunt-contrib-jshint": "~0.9.2",
+    "grunt-contrib-uglify": "~0.4.0"
+  }
+}
