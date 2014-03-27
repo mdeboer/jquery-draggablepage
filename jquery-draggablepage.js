@@ -22,14 +22,11 @@ var DraggablePage = {
 	// Target element
   _target: null,
 
-	// Allow dragging?
-  _allowDrag: false,
-
-	// Boolean to prevent multiple events firing on mouseup and mouseleave
-	_isHandlingReleaseEvent: false,
-
 	// CSS3 transition support
 	_useCSS3: false,
+
+	// Release event mutex
+	_handlingRelease: false,
 
 	// Initial coordinates
 	_targetX: null,
@@ -50,28 +47,20 @@ var DraggablePage = {
 
 	// Init
   init: function(target, options) {
-		// Load options
-		this._options = $.extend(true, {}, this._defaults, options);
 
-		// Check options
-		this.checkOptions();
+		// Handle options
+		this.handleOptions(options);
 
 		// Define target
 		this._target = target;
+
+		// Define event context
+		var context = this;
 
 		// Check for CSS3 transition support otherwise use fallback
 		if(typeof Modernizr !== 'undefined') {
 			this._useCSS3 = Modernizr.csstransitions;
 		}
-
-		// Bind events
-		this.bindEvents();
-  },
-
-	// Bind events
-	bindEvents: function() {
-		// Define event context
-		var context = this;
 
 		// Resize event
 		$(window).on('orientationchange resize', function(e) {
@@ -87,21 +76,17 @@ var DraggablePage = {
 		});
 
 		// Release event
-    this._target.one('mouseup mouseleave', function(e) {
-			if(this._isHandlingReleaseEvent) return;
-
-			this._isHandlingReleaseEvent = true;
+    this._target.on('mouseup mouseleave', function(e) {
 			context.onRelease(e, context);
 		});
+  },
 
-		// Move event
-    this._target.on('mousemove', function(e) {
-			context.onMove(e, context);
-		});
-	},
+	// Merge and check options for errors
+	handleOptions: function(options) {
 
-	// Check options for errors
-	checkOptions: function() {
+		// Load options
+		this._options = $.extend(true, {}, this._defaults, options);
+
 		// Direction
 		if($.inArray(this._options.direction, ['up','down','left','right']) == -1) {
 			throw "Invalid direction given for jQuery DraggablePage";
@@ -115,13 +100,12 @@ var DraggablePage = {
 
 	// Resize event (also for initial size)
 	onResize: function(e, context) {
+		// Set target height to a fixed 100% height
 		context._target.height($(window).height());
 	},
 
 	// Grab event
   onGrab: function(e, context) {
-		// Allow dragging
-    context._allowDrag = true;
 
 		// Save initial coordinates
     context._targetX = context._target.position().left;
@@ -129,16 +113,34 @@ var DraggablePage = {
     context._mouseX = e.pageX;
     context._mouseY = e.pageY;
 
-		// Re-enable CSS3 transitions
+		// Remove release mutex
+		context._handlingRelease = false;
+
+		// Disable CSS3 transitions
 		context._target.addClass('no-transitions');
 
-		// Re-enable text selection
+		// Disable text selection
 		context._target.addClass('no-select');
 		$(document.body).attr('unselectable', 'on');
+
+		// Bind move event
+    context._target.on('mousemove', function(e) {
+			context.onMove(e, context);
+		});
   },
 
 	// Release event
   onRelease: function(e, context) {
+
+		// Return if mutex is already set
+		if(context._handlingRelease) return;
+
+		// Remove move event
+		context._target.unbind('mousemove');
+
+		// Set release mutex
+		context._handlingRelease = true;
+
 		// Direction to be dragged
 		var direction = context._options.direction;
 
@@ -170,6 +172,7 @@ var DraggablePage = {
 			}
 		}
 		else if(direction == 'down') {
+
 			// Calculate pivot point
 			pivotPoint = Math.floor($(document).height() - ($(document).height() * context._options.pivotPoint));
 
@@ -198,6 +201,7 @@ var DraggablePage = {
 			}
 		}
 		else if(direction == 'right') {
+
 			// Calculate pivot point
 			pivotPoint = Math.floor($(document).width() - ($(document).width() * context._options.pivotPoint));
 
@@ -210,9 +214,6 @@ var DraggablePage = {
 			}
 		}
 
-		// Disable dragging
-    context._allowDrag = false;
-
 		// Reset initial coordinate properties
     context._targetX = null;
     context._targetY = null;
@@ -222,8 +223,6 @@ var DraggablePage = {
 
 	// Move event
   onMove: function(e, context) {
-		// Return if not draggable
-    if(!context._allowDrag) return;
 
 		// Direction to be dragged
 		var direction = context._options.direction;
@@ -264,30 +263,42 @@ var DraggablePage = {
 
 	// Animate property with CSS3 or fallback
 	animateProp: function(property, value, hiding) {
+
+		// Define event context
+		var context = this;
+
 		// CSS 3
 		if(this._useCSS3) {
+
+			// Set property
 			this._target.css(property, value);
 
-			if(hiding) {
-				// Fade out
-				if(this._options.animation.fade) {
-					this._target.css('opacity', 0);
-				}
+			// Fade out
+			if(hiding && this._options.animation.fade) {
+				this._target.css('opacity', 0);
+			}
 
-				// Listen for TransitionEnd to really hide the target
-				this._target.on('transitionend', function(e) {
-					if(e.propertyName == property) {
-						// Hide target
+			// Listen for TransitionEnd to stop handling release event
+			this._target.on('transitionend', function(e) {
+
+				// Check if transitionend fired for our property and not for example opacity
+				if(e.originalEvent.propertyName == property) {
+
+					// Remove release mutex
+					context._handlingRelease = false;
+
+					// Hide
+					if(hiding) {
 						$(e.target).hide();
 
 						// Trigger custom event draggablePageHidden
 						$(e.target).triggerHandler('draggablePageHidden');
-
-						// Unbind event
-						$(e.target).unbind('transitionend');
 					}
-				});
-			}
+
+					// Unbind event
+					$(e.target).unbind('transitionend');
+				}
+			});
 		}
 		else { // Fallback
 			var animProps = {};
@@ -302,6 +313,10 @@ var DraggablePage = {
 
 			// Animate
 			this._target.animate(animProps, this._options.animation.duration, 'swing', function() {
+
+				// Remove release mutex
+				context._handlingRelease = false;
+
 				if(hiding) {
 					// Hide target
 					$(this).hide();
